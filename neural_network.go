@@ -8,7 +8,8 @@ import (
 
 const (
 	Sigmoid = iota
-	Binary
+	//Binary
+	//TanH
 )
 
 func SigmoidFunc(x float64) float64 {
@@ -22,22 +23,32 @@ func BinaryFunc(x float64) float64 {
 	return 0
 }
 
+func TanHFunc(x float64) float64 {
+	return math.Tanh(x)
+}
+
 func DerivativeSigmoidFunc(x float64) float64 {
 	return x * (1 - x)
 }
 
 func DerivativeBinaryFunc(x float64) float64 {
-	return 0
+	return 0 * x
 }
 
-var ActivationFunctions = [2]func(float64) float64 {
+func DerivativeTanHFunc(x float64) float64 {
+	return 1 - math.Pow(x, 2)
+}
+
+var ActivationFunctions = [3]func(float64) float64{
 	SigmoidFunc,
 	BinaryFunc,
+	TanHFunc,
 }
 
-var DerivativeFunctions = [2]func(float64) float64 {
+var DerivativeFunctions = [3]func(float64) float64{
 	DerivativeSigmoidFunc,
 	DerivativeBinaryFunc,
+	DerivativeTanHFunc,
 }
 
 const (
@@ -57,15 +68,15 @@ type Neuron struct {
 }
 
 type NeuralNetworkConfig struct {
-	Layers			[]int
-	Bias			bool
-	ActivationFunc	int
-	LearningStep	float64
+	Layers         []int
+	Bias           bool
+	ActivationFunc int
+	LearningStep   float64
 }
 
 type NeuralNetwork struct {
-	Config  		*NeuralNetworkConfig
-	neurons			[]*Neuron
+	Config  *NeuralNetworkConfig
+	neurons []*Neuron
 }
 
 func (neuralNetwork *NeuralNetwork) getNeuron(layer int, number int) *Neuron {
@@ -84,7 +95,7 @@ func (neuralNetwork *NeuralNetwork) getNeuron(layer int, number int) *Neuron {
 	for _, layerNeuronsNumber := range neuralNetwork.Config.Layers[:layer] {
 		neuronsNumber += layerNeuronsNumber
 	}
-	return neuralNetwork.neurons[neuronsNumber + number]
+	return neuralNetwork.neurons[neuronsNumber+number]
 }
 
 func (neuralNetwork *NeuralNetwork) GetOutput() []float64 {
@@ -115,22 +126,22 @@ func (neuralNetwork *NeuralNetwork) New() {
 		switch layerNumber {
 		case 0:
 			NeuronType = NeuronTypeInput
-			nextLayerNeuronsNumber = neuralNetwork.Config.Layers[layerNumber + 1]
+			nextLayerNeuronsNumber = neuralNetwork.Config.Layers[layerNumber+1]
 		case len(neuralNetwork.Config.Layers) - 1:
 			NeuronType = NeuronTypeOutput
 			nextLayerNeuronsNumber = 0
 		default:
 			NeuronType = NeuronTypeHidden
-			nextLayerNeuronsNumber = neuralNetwork.Config.Layers[layerNumber + 1]
+			nextLayerNeuronsNumber = neuralNetwork.Config.Layers[layerNumber+1]
 		}
 
-		if neuralNetwork.Config.Bias && layerNumber != len(neuralNetwork.Config.Layers) - 1 {
+		if neuralNetwork.Config.Bias && layerNumber != len(neuralNetwork.Config.Layers)-1 {
 			neuron := &Neuron{
 				ActivationFunc: ActivationFunctions[neuralNetwork.Config.ActivationFunc],
 				DerivativeFunc: DerivativeFunctions[neuralNetwork.Config.ActivationFunc],
 				NeuronType:     NeuronTypeBias,
 				weights:        make([]float64, nextLayerNeuronsNumber),
-				Output:			1,
+				Output:         1,
 			}
 			for nextLayerNeuronNumber := 0; nextLayerNeuronNumber < nextLayerNeuronsNumber; nextLayerNeuronNumber++ {
 				neuron.weights[nextLayerNeuronNumber] = rand.Float64()
@@ -173,7 +184,7 @@ func (neuralNetwork *NeuralNetwork) Learn(inputs []float64, answers []float64) {
 			default:
 				var outputError float64 = 0
 				for nextLayerNeuronNumber := range neuron.weights {
-					nextLayerNeuron := neuralNetwork.getNeuron(layer + 1, nextLayerNeuronNumber)
+					nextLayerNeuron := neuralNetwork.getNeuron(layer+1, nextLayerNeuronNumber)
 					outputError += nextLayerNeuron.error * neuron.weights[nextLayerNeuronNumber]
 				}
 				neuron.error = outputError * neuron.DerivativeFunc(neuron.Output)
@@ -187,7 +198,7 @@ func (neuralNetwork *NeuralNetwork) Learn(inputs []float64, answers []float64) {
 		for neuronNumber := 0; neuronNumber < neuronsNumber; neuronNumber++ {
 			neuron := neuralNetwork.getNeuron(layer, neuronNumber)
 			for nextLayerNeuronNumber := range neuron.weights {
-				nextLayerNeuron := neuralNetwork.getNeuron(layer + 1, nextLayerNeuronNumber)
+				nextLayerNeuron := neuralNetwork.getNeuron(layer+1, nextLayerNeuronNumber)
 				neuron.weights[nextLayerNeuronNumber] += neuralNetwork.Config.LearningStep *
 					nextLayerNeuron.error *
 					//neuron.DerivativeFunc(nextLayerNeuron.Output) *
