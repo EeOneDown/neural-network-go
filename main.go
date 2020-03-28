@@ -83,8 +83,8 @@ func (dot *Dot) GetDisplayPosition() (float64, float64) {
 
 func run() {
 	cfgErr := pixelgl.WindowConfig{
-		Title:  "Neural Network",
-		Bounds: pixel.R(0, 0, WIDTH*2, HEIGHT/1.5),
+		Title:  "Neural Network Error",
+		Bounds: pixel.R(0, 0, MaxEpochs, HEIGHT/1.5),
 		VSync:  true,
 	}
 	winErr, err := pixelgl.NewWindow(cfgErr)
@@ -166,7 +166,7 @@ func run() {
 				} else {
 					imdErr.Color = pixel.RGB(0, 1, 0)
 				}
-				imdErr.Push(pixel.V(float64(Epoch), HEIGHT*learningError))
+				imdErr.Push(pixel.V(float64(Epoch), winErr.Bounds().H()*learningError))
 				imdErr.Circle(1, 0)
 			}
 			if t[0] == 1 {
